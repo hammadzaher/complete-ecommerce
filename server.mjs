@@ -203,10 +203,30 @@ app.use('/api/v1/*splat', (req, res, next) => {
 
 
 /////////////////////////////////////////////////////////////////
-app.get('/api/v1/profile', (req, res) => {
-    console.log("reqBody", req.body);
-    res.status(200).send({ message: "user found" })
-})
+app.get('/api/v1/profile', async (req, res) => {
+    const userId = req.body.token?.id;
+
+    try {
+        const result = await db.query(
+            `SELECT user_id, first_name, last_name, email, phone, user_role, profile FROM users WHERE user_id = $1`,
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).send({ message: "User not found" });
+        }
+
+        const user = result.rows[0];
+
+        res.status(200).send({
+            message: "User Found",
+            user
+        });
+    } catch (error) {
+        console.log("Error", error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
 
 
 
